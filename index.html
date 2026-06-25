@@ -322,25 +322,24 @@ function downloadScreenshot() {
         }
         wAlps -= 18;
 
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgb(242, 17, 17)";
+        ctx.fillStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
 
         ctx.beginPath();
-        ctx.roundRect(canvas.width / 2 - wStranger / 2, 110, wStranger, 7, 3);
-        ctx.stroke();
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 95, wStranger, 7, 3);
+        ctx.fill();
 
         let barGap = 25;
         let sideBarW = (wStranger - wAlps) / 2 - barGap;
         if (sideBarW > 0) {
             ctx.beginPath();
             ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
-            ctx.stroke();
+            ctx.fill();
 
             ctx.beginPath();
             ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
-            ctx.stroke();
+            ctx.fill();
         }
         ctx.shadowBlur = 0;
 
@@ -359,7 +358,7 @@ function downloadScreenshot() {
         });
         
         const positionsX = [220, canvas.width / 2, canvas.width - 220];
-        const positionsY = [650, 580, 650];
+        const positionsY = [570, 570, 570];
         [1, 2, 3].forEach((dinoId, idx) => {
             let dImg = dinoImgs[dinoId];
             if (dImg && dImg.complete) {
@@ -377,7 +376,7 @@ function downloadScreenshot() {
 
         const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
-        link.download = "stranger-alps-victory.png";
+        link.download = "stranger-alps-results.png";
         link.href = dataUrl;
         link.click();
     } catch (e) {
@@ -658,25 +657,24 @@ function updateAndRender() {
         }
         wAlps -= 18;
 
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgb(242, 17, 17)";
+        ctx.fillStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
 
         ctx.beginPath();
-        ctx.roundRect(canvas.width / 2 - wStranger / 2, 110, wStranger, 7, 3);
-        ctx.stroke();
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 95, wStranger, 7, 3);
+        ctx.fill();
 
         let barGap = 25;
         let sideBarW = (wStranger - wAlps) / 2 - barGap;
         if (sideBarW > 0) {
             ctx.beginPath();
             ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
-            ctx.stroke();
+            ctx.fill();
 
             ctx.beginPath();
             ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
-            ctx.stroke();
+            ctx.fill();
         }
         ctx.shadowBlur = 0;
 
@@ -719,7 +717,7 @@ function updateAndRender() {
 
         if (level === 3) {
             const positionsX = [220, canvas.width / 2, canvas.width - 220];
-            const positionsY = [530, 530, 530];
+            const positionsY = [505, 505, 505];
             [1, 2, 3].forEach((dinoId, idx) => {
                 let dImg = dinoImgs[dinoId];
                 if (dImg && dImg.complete) {
