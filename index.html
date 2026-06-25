@@ -328,18 +328,18 @@ function downloadScreenshot() {
         ctx.shadowBlur = 20;
 
         ctx.beginPath();
-        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 2, 3);
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 7, 3);
         ctx.stroke();
 
         let barGap = 25;
         let sideBarW = (wStranger - wAlps) / 2 - barGap;
         if (sideBarW > 0) {
             ctx.beginPath();
-            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 2, 3);
+            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 2, 3);
+            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
             ctx.stroke();
         }
         ctx.shadowBlur = 0;
@@ -664,18 +664,18 @@ function updateAndRender() {
         ctx.shadowBlur = 20;
 
         ctx.beginPath();
-        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 2, 3);
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 7, 3);
         ctx.stroke();
 
         let barGap = 25;
         let sideBarW = (wStranger - wAlps) / 2 - barGap;
         if (sideBarW > 0) {
             ctx.beginPath();
-            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 2, 3);
+            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 2, 3);
+            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
             ctx.stroke();
         }
         ctx.shadowBlur = 0;
