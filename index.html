@@ -309,70 +309,43 @@ function downloadScreenshot() {
         ctx.fillStyle = "rgba(4, 1, 3, 0.96)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        const strChars = [{c:'S',l:true},{c:'T',l:false},{c:'R',l:false},{c:'A',l:false},{c:'N',l:false},{c:'G',l:false},{c:'E',l:false},{c:'R',l:true}];
-        const alpsChars = [{c:'A',l:false},{c:'L',l:false},{c:'P',l:false},{c:'S',l:false}];
-        const fLarge = "155px 'Benguiat'";
-        const fSmall = "112px 'Benguiat'";
-        const logoSpacing = 4;
+        ctx.font = "125px 'Benguiat', 'Georgia', serif";
         let wStranger = 0;
-        strChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            ch.w = ctx.measureText(ch.c).width;
-            wStranger += ch.w + logoSpacing;
-        });
-        wStranger -= logoSpacing;
+        for (let char of "STRANGER") {
+            wStranger += ctx.measureText(char).width + 18;
+        }
+        wStranger -= 18;
+
         let wAlps = 0;
-        alpsChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            ch.w = ctx.measureText(ch.c).width;
-            wAlps += ch.w + logoSpacing;
-        });
-        wAlps -= logoSpacing;
-        let startX = canvas.width / 2 - wStranger / 2;
-        let startXAlps = canvas.width / 2 - wAlps / 2;
-        ctx.lineWidth = 3;
+        for (let char of "ALPS") {
+            wAlps += ctx.measureText(char).width + 18;
+        }
+        wAlps -= 18;
+
+        ctx.lineWidth = 2;
         ctx.strokeStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
+
         ctx.beginPath();
-        ctx.roundRect(startX, 92, wStranger, 18, 4);
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 7, 3);
         ctx.stroke();
-        let barY = 242;
-        ctx.beginPath();
-        ctx.roundRect(startX, barY + 12, (startXAlps - 15) - startX, 12, 3);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.roundRect(startXAlps + wAlps + 15, barY + 12, (startX + wStranger) - (startXAlps + wAlps + 15), 12, 3);
-        ctx.stroke();
+
+        let barGap = 25;
+        let sideBarW = (wStranger - wAlps) / 2 - barGap;
+        if (sideBarW > 0) {
+            ctx.beginPath();
+            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
+            ctx.stroke();
+        }
         ctx.shadowBlur = 0;
-        let currX = startX;
-        strChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            let yOff = ch.l ? 215 : 195;
-            ctx.save();
-            ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = COLORS.TEXT;
-            ctx.fillText(ch.c, currX, yOff);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.fillText(ch.c, currX, yOff - 2);
-            ctx.restore();
-            currX += ch.w + logoSpacing;
-        });
-        let currXAlps = startXAlps;
-        alpsChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            let yOff = ch.l ? 345 : 325;
-            ctx.save();
-            ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = COLORS.TEXT;
-            ctx.fillText(ch.c, currXAlps, yOff);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.fillText(ch.c, currXAlps, yOff - 2);
-            ctx.restore();
-            currXAlps += ch.w + logoSpacing;
-        });
+
+        drawNeonText("STRANGER", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true);
+        drawNeonText("ALPS", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true);
         
         levelResults.forEach((res, i) => {
             ctx.font = "44px 'Share Tech Mono', monospace";
@@ -672,70 +645,43 @@ function updateAndRender() {
         
         drawNeonText("Music prod. by erra", "32px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 60, 4, true);
         
-        const strChars = [{c:'S',l:true},{c:'T',l:false},{c:'R',l:false},{c:'A',l:false},{c:'N',l:false},{c:'G',l:false},{c:'E',l:false},{c:'R',l:true}];
-        const alpsChars = [{c:'A',l:false},{c:'L',l:false},{c:'P',l:false},{c:'S',l:false}];
-        const fLarge = "155px 'Benguiat'";
-        const fSmall = "112px 'Benguiat'";
-        const logoSpacing = 4;
+        ctx.font = "125px 'Benguiat', 'Georgia', serif";
         let wStranger = 0;
-        strChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            ch.w = ctx.measureText(ch.c).width;
-            wStranger += ch.w + logoSpacing;
-        });
-        wStranger -= logoSpacing;
+        for (let char of "STRANGER") {
+            wStranger += ctx.measureText(char).width + 18;
+        }
+        wStranger -= 18;
+
         let wAlps = 0;
-        alpsChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            ch.w = ctx.measureText(ch.c).width;
-            wAlps += ch.w + logoSpacing;
-        });
-        wAlps -= logoSpacing;
-        let startX = canvas.width / 2 - wStranger / 2;
-        let startXAlps = canvas.width / 2 - wAlps / 2;
-        ctx.lineWidth = 3;
+        for (let char of "ALPS") {
+            wAlps += ctx.measureText(char).width + 18;
+        }
+        wAlps -= 18;
+
+        ctx.lineWidth = 2;
         ctx.strokeStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
+
         ctx.beginPath();
-        ctx.roundRect(startX, 92, wStranger, 18, 4);
+        ctx.roundRect(canvas.width / 2 - wStranger / 2, 75, wStranger, 7, 3);
         ctx.stroke();
-        let barY = 242;
-        ctx.beginPath();
-        ctx.roundRect(startX, barY + 12, (startXAlps - 15) - startX, 12, 3);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.roundRect(startXAlps + wAlps + 15, barY + 12, (startX + wStranger) - (startXAlps + wAlps + 15), 12, 3);
-        ctx.stroke();
+
+        let barGap = 25;
+        let sideBarW = (wStranger - wAlps) / 2 - barGap;
+        if (sideBarW > 0) {
+            ctx.beginPath();
+            ctx.roundRect(canvas.width / 2 - wStranger / 2, 245, sideBarW, 7, 3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.roundRect(canvas.width / 2 + wAlps / 2 + barGap, 245, sideBarW, 7, 3);
+            ctx.stroke();
+        }
         ctx.shadowBlur = 0;
-        let currX = startX;
-        strChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            let yOff = ch.l ? 215 : 195;
-            ctx.save();
-            ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = COLORS.TEXT;
-            ctx.fillText(ch.c, currX, yOff);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.fillText(ch.c, currX, yOff - 2);
-            ctx.restore();
-            currX += ch.w + logoSpacing;
-        });
-        let currXAlps = startXAlps;
-        alpsChars.forEach(ch => {
-            ctx.font = ch.l ? fLarge : fSmall;
-            let yOff = ch.l ? 345 : 325;
-            ctx.save();
-            ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = COLORS.TEXT;
-            ctx.fillText(ch.c, currXAlps, yOff);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.fillText(ch.c, currXAlps, yOff - 2);
-            ctx.restore();
-            currXAlps += ch.w + logoSpacing;
-        });
+
+        drawNeonText("STRANGER", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true);
+        drawNeonText("ALPS", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true);
         
         drawNeonText("You're a dinosaur stuck in the Upside Down!", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 430, 4, true);
         drawNeonText("Complete 3 challenges to find your way home!", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 500, 4, true);
