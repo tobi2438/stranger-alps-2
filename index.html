@@ -601,12 +601,13 @@ function updateAndRender() {
         
         levelResults.forEach((res, i) => {
             ctx.font = "44px 'Share Tech Mono', monospace";
-            let lineW = 0;
-            for(let char of res) {
-                lineW += ctx.measureText(char).width + 8;
-            }
-            lineW -= 8;
-            drawNeonText(res, "44px 'Share Tech Mono', monospace", "rgb(140, 120, 125)", canvas.width / 2 - lineW / 2, 200 + (i * 50), 8, false);
+            let maxW = 0;
+            levelResults.forEach(r => {
+                let w = 0;
+                for(let char of r) { w += ctx.measureText(char).width + 8; }
+                if(w > maxW) maxW = w;
+            });
+            drawNeonText(res, "44px 'Share Tech Mono', monospace", "rgb(140, 120, 125)", canvas.width / 2 - maxW / 2, 200 + (i * 50), 8, false);
         });
         
         instr.forEach((line, i) => {
@@ -615,13 +616,14 @@ function updateAndRender() {
 
         if (level === 3) {
             const positionsX = [canvas.width / 2 - 420, canvas.width / 2, canvas.width / 2 + 420];
+            const positionsY = [435, 600, 435];
             [1, 2, 3].forEach((dinoId, idx) => {
                 let dImg = dinoImgs[dinoId];
                 if (dImg && dImg.complete) {
                     ctx.save();
                     ctx.shadowColor = "rgba(242, 17, 17, 0.7)";
                     ctx.shadowBlur = 25;
-                    ctx.translate(positionsX[idx], 600);
+                    ctx.translate(positionsX[idx], positionsY[idx]);
                     
                     ctx.translate(0, Math.sin(ticks * 0.007) * 20);
                     let sfX = 1 + Math.sin(ticks * 0.007) * 0.06;
