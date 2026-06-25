@@ -71,6 +71,7 @@ let clickCooldown = 0;
 
 let shakeTimer = 0;
 let shakeIntensity = 0;
+let isExportingScreenshot = false;
 
 const dinoImgs = {};
 const obsImgs = {};
@@ -304,7 +305,9 @@ function triggerHit() {
 function downloadScreenshot() {
     try {
         let ticks = Date.now();
-        drawScene(ticks, true);
+        isExportingScreenshot = true;
+        drawScene(ticks);
+        isExportingScreenshot = false;
         
         ctx.fillStyle = "rgba(4, 1, 3, 0.96)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -468,7 +471,7 @@ canvas.addEventListener("touchstart", (e) => {
     }
 });
 
-function drawScene(ticks, isScreenshot = false) {
+function drawScene(ticks) {
     ctx.fillStyle = COLORS.SKY;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -516,7 +519,7 @@ function drawScene(ticks, isScreenshot = false) {
         ctx.fill();
     }
 
-    if (!isScreenshot) {
+    if (!isExportingScreenshot) {
         let dImg = dinoImgs[level];
         if (dImg && dImg.complete) {
             ctx.save();
