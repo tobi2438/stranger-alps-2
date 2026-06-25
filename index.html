@@ -43,11 +43,11 @@ const COLORS = {
     SKY: "rgb(4, 2, 10)",
     ALPS_FAR: "rgb(15, 8, 22)",
     ALPS_NEAR: "rgb(24, 12, 32)",
-    SNOW: "rgb(110, 30, 35)",
+    SNOW: "rgb(100, 105, 115)", // Swapped red snow out for dark, cold grey snow
     TEXT: "rgb(242, 17, 17)",
     WHITE: "rgb(255, 235, 235)",
     GLOW_GREY: "rgb(150, 130, 135)",
-    ASH: "rgba(230, 40, 40, 0.4)",
+    ASH: "rgba(200, 200, 200, 0.4)", // Changed floating ash particles from red to pale grey
     REC_RED: "rgb(255, 0, 0)"
 };
 
@@ -434,10 +434,11 @@ function updateAndRender() {
         }
     }
 
+    // Adjusted the supernatural moon color from red to a ghostly pale silver-blue
     ctx.save();
     ctx.shadowBlur = 40;
-    ctx.shadowColor = "rgba(220, 20, 20, 0.4)";
-    ctx.fillStyle = "rgb(140, 20, 25)";
+    ctx.shadowColor = "rgba(100, 140, 200, 0.4)";
+    ctx.fillStyle = "rgb(80, 100, 130)";
     ctx.beginPath(); ctx.arc(canvas.width - 200, 220, 75, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
     ctx.fillStyle = COLORS.SKY;
