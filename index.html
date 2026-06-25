@@ -19,7 +19,7 @@
         }
         canvas {
             background-color: rgb(3, 2, 8);
-            box-shadow: 0 0 35px rgba(255, 0, 0, 0.4), inset 0 0 100px rgba(255, 0, 0, 0.2);
+            box-shadow: 0 0 45px rgba(255, 0, 0, 0.5), inset 0 0 120px rgba(0, 0, 0, 0.9);
             max-width: 100%;
             max-height: 100%;
             transform: translateZ(0);
@@ -41,13 +41,13 @@ const GRAVITY = 1.6;
 const JUMP_STRENGTH = -39;
 const COLORS = {
     SKY: "rgb(4, 2, 10)",
-    ALPS_FAR: "rgb(45, 30, 65)",    // Made back layer brighter (muted slate indigo)
-    ALPS_NEAR: "rgb(80, 40, 115)",  // Made front layer even brighter (vibrant deep purple)
-    SNOW: "rgb(100, 105, 115)", 
+    ALPS_FAR: "rgb(45, 48, 57)",    
+    ALPS_NEAR: "rgb(25, 27, 33)",   
+    SNOW: "rgb(90, 95, 105)", 
     TEXT: "rgb(242, 17, 17)",
     WHITE: "rgb(255, 235, 235)",
     GLOW_GREY: "rgb(150, 130, 135)",
-    ASH: "rgba(200, 200, 200, 0.4)", 
+    ASH: "rgba(220, 150, 150, 0.35)", 
     REC_RED: "rgb(255, 0, 0)"
 };
 
@@ -64,6 +64,11 @@ let dinoVelY = 0, isJumping = false, jumpAngle = 0;
 let obstacles = [], spawnTimer = 0, finishingLevel = false;
 let nextSpawnThreshold = 80;
 let clickCooldown = 0;
+
+// Screen Shake and Flash variables
+let shakeTimer = 0;
+let shakeIntensity = 0;
+let flashTimer = 0;
 
 const dinoImgs = {};
 const obsImgs = {};
@@ -137,14 +142,14 @@ function playNextTrack() {
 }
 
 const ashParticles = [];
-for (let i = 0; i < 60; i++) {
+for (let i = 0; i < 75; i++) {
     ashParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: 0.5 + Math.random() * 2.0,
-        size: 1 + Math.random() * 3,
-        wobbleSpeed: 0.01 + Math.random() * 0.03,
-        wobbleRange: 1 + Math.random() * 3,
+        speed: 0.3 + Math.random() * 1.2,
+        size: 1 + Math.random() * 4,
+        wobbleSpeed: 0.005 + Math.random() * 0.015,
+        wobbleRange: 2 + Math.random() * 4,
         seed: Math.random() * 100
     });
 }
@@ -196,7 +201,7 @@ class MountainLayer {
                 ctx.lineTo(m.poly[2].x + xPos, m.poly[2].y);
                 ctx.closePath();
                 ctx.fill();
-                if (m.snow && this.hasSnow) { // Strictly ensure snow only draws if layer configuration allows it
+                if (m.snow && this.hasSnow) {
                     ctx.fillStyle = COLORS.SNOW;
                     ctx.beginPath();
                     ctx.moveTo(m.snow[0].x + xPos, m.snow[0].y);
@@ -210,7 +215,6 @@ class MountainLayer {
     }
 }
 
-// Created two distinct instances: far layer (slow, no snow) and near layer (faster, with snow)
 const farLayer = new MountainLayer(COLORS.ALPS_FAR, 60, 120, 0.4, false);
 const nearLayer = new MountainLayer(COLORS.ALPS_NEAR, 100, 200, 1.2, true);
 
@@ -221,7 +225,7 @@ function formatTime(ms) {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}:${msPart.toString().padStart(2, '0')}`;
 }
 
-function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
+function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false, glitch = false) {
     ctx.font = fontStr;
     let isStrangerTitle = fontStr.includes("Benguiat") || fontStr.includes("Georgia");
     
@@ -242,6 +246,12 @@ function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
         ctx.shadowBlur = 8;
     }
 
+    // Cinematic text glitching effect for the title screen
+    if (glitch && Math.random() < 0.08) {
+        currX += (Math.random() - 0.5) * 12;
+        y += (Math.random() - 0.5) * 4;
+    }
+
     for (let char of text) {
         ctx.fillStyle = color;
         ctx.fillText(char, currX, y);
@@ -254,6 +264,16 @@ function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
         currX += ctx.measureText(char).width + spacing;
     }
     ctx.restore();
+}
+
+function drawVignette() {
+    // Punisher inspired atmospheric vignette
+    let vignette = ctx.createRadialGradient(canvas.width/2, canvas.height/2, canvas.width/4, canvas.width/2, canvas.height/2, canvas.width * 0.8);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(0.6, "rgba(20, 2, 2, 0.3)");
+    vignette.addColorStop(1, "rgba(0, 0, 0, 0.95)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function resetLevel(fullReset = false) {
@@ -278,6 +298,16 @@ function resetLevel(fullReset = false) {
     
     levelStartTicks = Date.now();
     clickCooldown = 20;
+}
+
+function triggerHit() {
+    initAudioContext();
+    playSFX('hit');
+    shakeTimer = 25; // 25 frames of screen shake
+    shakeIntensity = 15;
+    flashTimer = 15; // 15 frames of bright red flash
+    state = 3;
+    clickCooldown = 25;
 }
 
 function handleAction() {
@@ -354,6 +384,17 @@ canvas.addEventListener("touchstart", (e) => {
 function updateAndRender() {
     let ticks = Date.now();
     if (clickCooldown > 0) clickCooldown--;
+    
+    ctx.save();
+    
+    // Apply camera shake if active
+    if (shakeTimer > 0) {
+        let dx = (Math.random() - 0.5) * shakeIntensity;
+        let dy = (Math.random() - 0.5) * shakeIntensity;
+        ctx.translate(dx, dy);
+        shakeTimer--;
+    }
+
     ctx.fillStyle = COLORS.SKY;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -361,7 +402,7 @@ function updateAndRender() {
     let pulseCol = `rgb(${160 + 95 * pulse}, 10, 10)`;
 
     if (state === 1) {
-        farLayer.update();  // Explicitly processing the position changes for the background tier
+        farLayer.update();
         nearLayer.update();
         
         dinoVelY += GRAVITY;
@@ -425,39 +466,56 @@ function updateAndRender() {
                 dinoHitbox.x + dinoHitbox.w > obsHitbox.x &&
                 dinoHitbox.y < obsHitbox.y + obsHitbox.h &&
                 dinoHitbox.y + dinoHitbox.h > obsHitbox.y) {
-                initAudioContext();
-                playSFX('hit');
-                state = 3;
-                clickCooldown = 20;
+                triggerHit();
             }
 
             if (obs.x < -400) obstacles.splice(i, 1);
         }
     }
 
+    // Draw Blood Moon
     ctx.save();
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = "rgba(100, 140, 200, 0.4)";
-    ctx.fillStyle = "rgb(80, 100, 130)";
+    ctx.shadowBlur = 50;
+    ctx.shadowColor = "rgba(220, 20, 20, 0.6)";
+    ctx.fillStyle = "rgb(150, 20, 20)";
     ctx.beginPath(); ctx.arc(canvas.width - 200, 220, 75, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
     ctx.fillStyle = COLORS.SKY;
     ctx.beginPath();
     ctx.arc(canvas.width - 150, 200, 80, 0, Math.PI * 2); ctx.fill();
 
-    farLayer.draw();  // Rendered deep layer behind the near hills
+    farLayer.draw();  
     nearLayer.draw();
 
-    ctx.fillStyle = "rgb(8, 4, 12)";
-    ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-    ctx.fillStyle = "rgba(242, 17, 17, 0.6)";
-    ctx.fillRect(0, canvas.height - 80, canvas.width, 4);
+    // UPGRADED: Dynamic Squirming Vine Floor mapping
+    ctx.fillStyle = "rgb(12, 4, 8)";
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    for (let x = 0; x <= canvas.width; x += 20) {
+        // Multi-layered sine wave to simulate shifting biological creep
+        let vineWave = Math.sin(x * 0.01 + ticks * 0.002) * 6 + Math.sin(x * 0.03 - ticks * 0.004) * 3;
+        ctx.lineTo(x, canvas.height - 80 + vineWave);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+
+    // Red bio-luminescent vine edge line
+    ctx.strokeStyle = "rgba(242, 17, 17, 0.7)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    for (let x = 0; x <= canvas.width; x += 20) {
+        let vineWave = Math.sin(x * 0.01 + ticks * 0.002) * 6 + Math.sin(x * 0.03 - ticks * 0.004) * 3;
+        if(x === 0) ctx.moveTo(x, canvas.height - 80 + vineWave);
+        else ctx.lineTo(x, canvas.height - 80 + vineWave);
+    }
+    ctx.stroke();
 
     ctx.fillStyle = COLORS.ASH;
     for (let p of ashParticles) {
-        if (state === 1) {
+        if (state === 1 || state === 0) {
             p.x -= p.speed;
-            p.y += Math.sin(ticks * p.wobbleSpeed + p.seed) * p.wobbleRange * 0.2;
+            p.y += Math.sin(ticks * p.wobbleSpeed + p.seed) * p.wobbleRange * 0.15;
         }
         if (p.x < 0) {
             p.x = canvas.width;
@@ -486,6 +544,8 @@ function updateAndRender() {
         }
     }
 
+    drawVignette();
+
     let uiColor = state === 1 ? COLORS.TEXT : COLORS.GLOW_GREY;
     if (state === 1 && Math.floor(ticks / 600) % 2 === 0) {
         ctx.fillStyle = COLORS.REC_RED;
@@ -498,7 +558,7 @@ function updateAndRender() {
     drawNeonText(timeStr, "44px 'Share Tech Mono', monospace", uiColor, canvas.width - 440, 65);
 
     if (state === 0) {
-        ctx.fillStyle = "rgba(4, 1, 3, 0.98)";
+        ctx.fillStyle = "rgba(4, 1, 3, 0.95)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         drawNeonText("Music prod. by erra", "32px 'Share Tech Mono', monospace", "rgb(130, 110, 115)", canvas.width / 2, 60, 4, true);
@@ -513,8 +573,8 @@ function updateAndRender() {
         ctx.stroke();
         ctx.shadowBlur = 0;
 
-        drawNeonText("STRANGER", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true);
-        drawNeonText("ALPS", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true);
+        drawNeonText("STRANGER", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true, true);
+        drawNeonText("ALPS", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true, true);
         
         drawNeonText("You're a dinosaur stuck in the Upside Down!", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 430, 4, true);
         drawNeonText("Complete 3 challenges to find your way home.", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 500, 4, true);
@@ -524,7 +584,7 @@ function updateAndRender() {
         drawNeonText("CONTINUE", "96px 'Benguiat', 'Georgia', serif", pulseCol, canvas.width / 2, 830, 10, true);
     } 
     else if (state === 2) {
-        ctx.fillStyle = "rgba(4, 1, 3, 0.98)";
+        ctx.fillStyle = "rgba(4, 1, 3, 0.96)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         let title = level === 3 ? "GATE CLOSED" : "MISSION SUCCESS";
@@ -551,6 +611,14 @@ function updateAndRender() {
         drawNeonText("RESTART GAME", "46px 'Share Tech Mono', monospace", COLORS.WHITE, canvas.width / 2, 650, 10, true);
     }
 
+    // Draw lightning hit flash overlays
+    if (flashTimer > 0) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${flashTimer / 15})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        flashTimer--;
+    }
+
+    ctx.restore();
     requestAnimationFrame(updateAndRender);
 }
 
