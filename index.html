@@ -2,30 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stranger Alps</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Benguiat:wght@700&family=Share+Tech+Mono&display=swap');
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
+            background-color: #030000;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: monospace;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
+            font-family: 'Share Tech Mono', monospace;
         }
         canvas {
-            background-color: rgb(5, 5, 20);
-            box-shadow: 0 0 20px rgba(255, 40, 40, 0.3);
+            background-color: rgb(3, 2, 8);
+            box-shadow: 0 0 35px rgba(255, 0, 0, 0.4), inset 0 0 100px rgba(255, 0, 0, 0.2);
             max-width: 100%;
             max-height: 100%;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
+            border: 4px solid #1a0000;
         }
     </style>
 </head>
@@ -41,15 +40,15 @@ const FPS = 60;
 const GRAVITY = 1.6;
 const JUMP_STRENGTH = -39;
 const COLORS = {
-    SKY: "rgb(5, 5, 20)",
-    ALPS_FAR: "rgb(25, 25, 60)",
-    ALPS_NEAR: "rgb(40, 40, 90)",
-    SNOW: "rgb(160, 165, 175)",
-    TEXT: "rgb(255, 40, 40)",
-    WHITE: "rgb(255, 255, 255)",
-    GLOW_GREY: "rgb(180, 185, 200)",
-    ASH: "rgb(180, 180, 200)",
-    REC_RED: "rgb(220, 0, 0)"
+    SKY: "rgb(4, 2, 10)",
+    ALPS_FAR: "rgb(15, 8, 22)",
+    ALPS_NEAR: "rgb(24, 12, 32)",
+    SNOW: "rgb(110, 30, 35)",
+    TEXT: "rgb(242, 17, 17)",
+    WHITE: "rgb(255, 235, 235)",
+    GLOW_GREY: "rgb(150, 130, 135)",
+    ASH: "rgba(230, 40, 40, 0.4)",
+    REC_RED: "rgb(255, 0, 0)"
 };
 
 let state = 0; 
@@ -78,7 +77,6 @@ const sfx = {
 };
 
 function initAudioContext() {
-    if (audioCtx && audioCtx.state === 'running') return;
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -125,8 +123,7 @@ function initAssets() {
             .catch(() => {});
     }
 
-    sfx.musicElement = new Audio();
-    sfx.musicElement.src = sfx.playlist[sfx.currentTrack];
+    sfx.musicElement = new Audio(sfx.playlist[sfx.currentTrack]);
     sfx.musicElement.addEventListener('ended', playNextTrack);
 }
 
@@ -140,11 +137,15 @@ function playNextTrack() {
 }
 
 const ashParticles = [];
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 60; i++) {
     ashParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: 1.0 + Math.random() * 3.0
+        speed: 0.5 + Math.random() * 2.0,
+        size: 1 + Math.random() * 3,
+        wobbleSpeed: 0.01 + Math.random() * 0.03,
+        wobbleRange: 1 + Math.random() * 3,
+        seed: Math.random() * 100
     });
 }
 
@@ -221,6 +222,8 @@ function formatTime(ms) {
 
 function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
     ctx.font = fontStr;
+    let isStrangerTitle = fontStr.includes("Benguiat") || fontStr.includes("Georgia");
+    
     let totalW = 0;
     for(let char of text) {
         totalW += ctx.measureText(char).width + spacing;
@@ -228,13 +231,28 @@ function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
     totalW -= spacing;
 
     let currX = center ? x - (totalW / 2) : x;
+    
+    ctx.save();
+    if (isStrangerTitle) {
+        ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
+        ctx.shadowBlur = 20;
+    } else {
+        ctx.shadowColor = "rgba(255, 0, 0, 0.5)";
+        ctx.shadowBlur = 8;
+    }
+
     for (let char of text) {
-        ctx.fillStyle = "rgb(255, 230, 230)";
-        ctx.fillText(char, currX, y);
         ctx.fillStyle = color;
-        ctx.fillText(char, currX - 1, y - 1);
+        ctx.fillText(char, currX, y);
+        
+        if (isStrangerTitle) {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.fillText(char, currX, y - 2);
+        }
+        
         currX += ctx.measureText(char).width + spacing;
     }
+    ctx.restore();
 }
 
 function resetLevel(fullReset = false) {
@@ -271,6 +289,7 @@ function handleAction() {
         state = 1;
     } else if (state === 1) {
         if (!isJumping) {
+            initAudioContext();
             isJumping = true;
             dinoVelY = JUMP_STRENGTH;
             playSFX('jump');
@@ -312,13 +331,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-    if (state === 0 && sfx.musicElement) {
-        initAudioContext();
-        sfx.musicElement.play().catch(() => {});
-    } else {
-        initAudioContext();
-    }
-    
+    initAudioContext();
     if (state === 3) {
         handleMenuSelection(e.clientX, e.clientY);
     } else {
@@ -328,13 +341,7 @@ canvas.addEventListener("mousedown", (e) => {
 
 canvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
-    if (state === 0 && sfx.musicElement) {
-        initAudioContext();
-        sfx.musicElement.play().catch(() => {});
-    } else {
-        initAudioContext();
-    }
-
+    initAudioContext();
     if (state === 3) {
         const touch = e.touches[0];
         handleMenuSelection(touch.clientX, touch.clientY);
@@ -350,7 +357,7 @@ function updateAndRender() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let pulse = (Math.sin(ticks * 0.005) + 1) / 2;
-    let pulseCol = `rgb(${150 + 105 * pulse}, 40, 40)`;
+    let pulseCol = `rgb(${160 + 95 * pulse}, 10, 10)`;
 
     if (state === 1) {
         farLayer.update();
@@ -417,6 +424,7 @@ function updateAndRender() {
                 dinoHitbox.x + dinoHitbox.w > obsHitbox.x &&
                 dinoHitbox.y < obsHitbox.y + obsHitbox.h &&
                 dinoHitbox.y + dinoHitbox.h > obsHitbox.y) {
+                initAudioContext();
                 playSFX('hit');
                 state = 3;
                 clickCooldown = 20;
@@ -426,27 +434,36 @@ function updateAndRender() {
         }
     }
 
-    ctx.fillStyle = "rgb(230, 230, 230)";
-    ctx.beginPath(); ctx.arc(canvas.width - 200, 220, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = "rgba(220, 20, 20, 0.4)";
+    ctx.fillStyle = "rgb(140, 20, 25)";
+    ctx.beginPath(); ctx.arc(canvas.width - 200, 220, 75, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
     ctx.fillStyle = COLORS.SKY;
     ctx.beginPath();
-    ctx.arc(canvas.width - 164, 220, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.arc(canvas.width - 150, 200, 80, 0, Math.PI * 2); ctx.fill();
 
     farLayer.draw();
     nearLayer.draw();
 
-    ctx.fillStyle = "rgb(5, 5, 15)";
+    ctx.fillStyle = "rgb(8, 4, 12)";
     ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+    ctx.fillStyle = "rgba(242, 17, 17, 0.6)";
+    ctx.fillRect(0, canvas.height - 80, canvas.width, 4);
 
     ctx.fillStyle = COLORS.ASH;
     for (let p of ashParticles) {
-        if (state === 1) p.x -= p.speed;
+        if (state === 1) {
+            p.x -= p.speed;
+            p.y += Math.sin(ticks * p.wobbleSpeed + p.seed) * p.wobbleRange * 0.2;
+        }
         if (p.x < 0) {
             p.x = canvas.width;
             p.y = Math.random() * canvas.height;
         }
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -474,27 +491,39 @@ function updateAndRender() {
         ctx.beginPath(); ctx.arc(70, 36 + 22, 14, 0, Math.PI * 2); ctx.fill();
     }
     
-    drawNeonText("REC", "44px monospace", uiColor, 110, 65);
-    drawNeonText(`LEVEL ${level}`, "44px monospace", uiColor, canvas.width / 2, 65, 6, true);
+    drawNeonText("REC", "44px 'Share Tech Mono', monospace", uiColor, 110, 65);
+    drawNeonText(`LEVEL ${level}`, "44px 'Share Tech Mono', monospace", uiColor, canvas.width / 2, 65, 6, true);
     let timeStr = formatTime(state === 1 ? (Date.now() - levelStartTicks) : 0);
-    drawNeonText(timeStr, "44px monospace", uiColor, canvas.width - 440, 65);
+    drawNeonText(timeStr, "44px 'Share Tech Mono', monospace", uiColor, canvas.width - 440, 65);
 
     if (state === 0) {
-        ctx.fillStyle = "rgba(5, 0, 0, 0.97)";
+        ctx.fillStyle = "rgba(4, 1, 3, 0.98)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        drawNeonText("Music prod. by erra", "32px monospace", COLORS.WHITE, canvas.width / 2, 60, 4, true);
-        drawNeonText("STRANGER", "112px Georgia", COLORS.TEXT, canvas.width / 2, 170, 30, true);
-        drawNeonText("ALPS", "112px Georgia", COLORS.TEXT, canvas.width / 2, 290, 30, true);
-        drawNeonText("You're a dinosaur stuck in the Upside Down!", "44px monospace", "rgb(200, 200, 200)", canvas.width / 2, 390, 4, true);
-        drawNeonText("Complete 3 challenges to find your way home.", "44px monospace", "rgb(200, 200, 200)", canvas.width / 2, 470, 4, true);
-        drawNeonText("FIRST MISSION: Jump over Dustin", "44px monospace", COLORS.WHITE, canvas.width / 2, 570, 4, true);
-        drawNeonText("CLICK/TAP the screen or press the SPACE bar", "44px monospace", COLORS.TEXT, canvas.width / 2, 630, 4, true);
-        drawNeonText("to jump", "44px monospace", COLORS.TEXT, canvas.width / 2, 690, 4, true);
-        drawNeonText("CONTINUE", "96px Georgia", pulseCol, canvas.width / 2, 810, 10, true);
+        drawNeonText("Music prod. by erra", "32px 'Share Tech Mono', monospace", "rgb(130, 110, 115)", canvas.width / 2, 60, 4, true);
+        
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgb(242, 17, 17)";
+        ctx.shadowColor = "rgba(242, 17, 17, 0.8)";
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2 - 400, 85);
+        ctx.lineTo(canvas.width / 2 + 400, 85);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        drawNeonText("STRANGER", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true);
+        drawNeonText("ALPS", "125px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true);
+        
+        drawNeonText("You're a dinosaur stuck in the Upside Down!", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 430, 4, true);
+        drawNeonText("Complete 3 challenges to find your way home.", "42px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 500, 4, true);
+        drawNeonText("FIRST MISSION: Jump over Dustin", "44px 'Share Tech Mono', monospace", COLORS.WHITE, canvas.width / 2, 590, 4, true);
+        drawNeonText("CLICK/TAP the screen or press the SPACE bar", "42px 'Share Tech Mono', monospace", COLORS.TEXT, canvas.width / 2, 660, 4, true);
+        drawNeonText("to jump", "42px 'Share Tech Mono', monospace", COLORS.TEXT, canvas.width / 2, 710, 4, true);
+        drawNeonText("CONTINUE", "96px 'Benguiat', 'Georgia', serif", pulseCol, canvas.width / 2, 830, 10, true);
     } 
     else if (state === 2) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.97)";
+        ctx.fillStyle = "rgba(4, 1, 3, 0.98)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         let title = level === 3 ? "GATE CLOSED" : "MISSION SUCCESS";
@@ -502,23 +531,23 @@ function updateAndRender() {
                     (level === 1 ? ["Next: Leap over the Phoebe Bridgers ghost...", "or is it Eleven wearing a Halloween costume?", "Either way, jump!"] :
                                    ["You're almost at the finish line!", "Jump over the Demogorgons to close the gate!", ""]);
         
-        drawNeonText(title, "112px Georgia", COLORS.TEXT, canvas.width / 2, 180, 20, true);
+        drawNeonText(title, "112px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 180, 20, true);
         levelResults.forEach((res, i) => {
-            drawNeonText(res, "44px monospace", "rgb(150, 150, 150)", canvas.width / 2, 300 + (i * 70), 8, true);
+            drawNeonText(res, "44px 'Share Tech Mono', monospace", "rgb(140, 120, 125)", canvas.width / 2, 300 + (i * 70), 8, true);
         });
         instr.forEach((line, i) => {
-            drawNeonText(line, "44px monospace", "rgb(220, 220, 220)", canvas.width / 2, 520 + (i * 70), 4, true);
+            drawNeonText(line, "44px 'Share Tech Mono', monospace", "rgb(200, 190, 195)", canvas.width / 2, 520 + (i * 70), 4, true);
         });
         let btnText = level === 3 ? "RESTART" : "CONTINUE";
-        drawNeonText(btnText, "96px Georgia", pulseCol, canvas.width / 2, 810, 10, true);
+        drawNeonText(btnText, "96px 'Benguiat', 'Georgia', serif", pulseCol, canvas.width / 2, 810, 10, true);
     } 
     else if (state === 3) {
-        ctx.fillStyle = "rgba(45, 0, 0, 0.94)";
+        ctx.fillStyle = "rgba(22, 2, 5, 0.96)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        drawNeonText("MISSION FAILED", "112px Georgia", COLORS.TEXT, canvas.width / 2, 250, 12, true);
-        drawNeonText("RETRY LEVEL", "44px monospace", COLORS.WHITE, canvas.width / 2, 530, 10, true);
-        drawNeonText("RESTART GAME", "44px monospace", COLORS.WHITE, canvas.width / 2, 650, 10, true);
+        drawNeonText("MISSION FAILED", "112px 'Benguiat', 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 250, 12, true);
+        drawNeonText("RETRY LEVEL", "46px 'Share Tech Mono', monospace", COLORS.WHITE, canvas.width / 2, 530, 10, true);
+        drawNeonText("RESTART GAME", "46px 'Share Tech Mono', monospace", COLORS.WHITE, canvas.width / 2, 650, 10, true);
     }
 
     requestAnimationFrame(updateAndRender);
