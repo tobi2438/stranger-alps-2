@@ -633,15 +633,17 @@ function updateAndRender() {
     let pulseCol = `rgb(${160 + 95 * pulse}, 10, 10)`;
     let uiColor = state === 1 ? COLORS.TEXT : COLORS.GLOW_GREY;
     
-    if (state === 1 && Math.floor(ticks / 600) % 2 === 0) {
-        ctx.fillStyle = COLORS.REC_RED;
-        ctx.beginPath(); ctx.arc(70, 48, 14, 0, Math.PI * 2); ctx.fill();
+    if (state !== 2) {
+        if (state === 1 && Math.floor(ticks / 600) % 2 === 0) {
+            ctx.fillStyle = COLORS.REC_RED;
+            ctx.beginPath(); ctx.arc(70, 48, 14, 0, Math.PI * 2); ctx.fill();
+        }
+        
+        drawNeonText("REC", "44px 'Share Tech Mono', monospace", uiColor, 110, 65);
+        drawNeonText(`LEVEL ${level}`, "44px 'Share Tech Mono', monospace", uiColor, canvas.width / 2, 65, 6, true);
+        let timeStr = formatTime(state === 1 ? (Date.now() - levelStartTicks) : 0);
+        drawNeonText(timeStr, "44px 'Share Tech Mono', monospace", uiColor, canvas.width - 440, 65);
     }
-    
-    drawNeonText("REC", "44px 'Share Tech Mono', monospace", uiColor, 110, 65);
-    drawNeonText(`LEVEL ${level}`, "44px 'Share Tech Mono', monospace", uiColor, canvas.width / 2, 65, 6, true);
-    let timeStr = formatTime(state === 1 ? (Date.now() - levelStartTicks) : 0);
-    drawNeonText(timeStr, "44px 'Share Tech Mono', monospace", uiColor, canvas.width - 440, 65);
 
     if (state === 0) {
         ctx.fillStyle = "rgb(1, 0, 0)";
