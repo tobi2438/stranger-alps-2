@@ -41,13 +41,13 @@ const GRAVITY = 1.6;
 const JUMP_STRENGTH = -39;
 const COLORS = {
     SKY: "rgb(4, 2, 10)",
-    ALPS_FAR: "rgb(15, 8, 22)",
-    ALPS_NEAR: "rgb(24, 12, 32)",
-    SNOW: "rgb(100, 105, 115)", // Swapped red snow out for dark, cold grey snow
+    ALPS_FAR: "rgb(45, 30, 65)",    // Made back layer brighter (muted slate indigo)
+    ALPS_NEAR: "rgb(80, 40, 115)",  // Made front layer even brighter (vibrant deep purple)
+    SNOW: "rgb(100, 105, 115)", 
     TEXT: "rgb(242, 17, 17)",
     WHITE: "rgb(255, 235, 235)",
     GLOW_GREY: "rgb(150, 130, 135)",
-    ASH: "rgba(200, 200, 200, 0.4)", // Changed floating ash particles from red to pale grey
+    ASH: "rgba(200, 200, 200, 0.4)", 
     REC_RED: "rgb(255, 0, 0)"
 };
 
@@ -196,7 +196,7 @@ class MountainLayer {
                 ctx.lineTo(m.poly[2].x + xPos, m.poly[2].y);
                 ctx.closePath();
                 ctx.fill();
-                if (m.snow) {
+                if (m.snow && this.hasSnow) { // Strictly ensure snow only draws if layer configuration allows it
                     ctx.fillStyle = COLORS.SNOW;
                     ctx.beginPath();
                     ctx.moveTo(m.snow[0].x + xPos, m.snow[0].y);
@@ -210,7 +210,8 @@ class MountainLayer {
     }
 }
 
-const farLayer = new MountainLayer(COLORS.ALPS_FAR, 60, 120, 0.4);
+// Created two distinct instances: far layer (slow, no snow) and near layer (faster, with snow)
+const farLayer = new MountainLayer(COLORS.ALPS_FAR, 60, 120, 0.4, false);
 const nearLayer = new MountainLayer(COLORS.ALPS_NEAR, 100, 200, 1.2, true);
 
 function formatTime(ms) {
@@ -360,7 +361,7 @@ function updateAndRender() {
     let pulseCol = `rgb(${160 + 95 * pulse}, 10, 10)`;
 
     if (state === 1) {
-        farLayer.update();
+        farLayer.update();  // Explicitly processing the position changes for the background tier
         nearLayer.update();
         
         dinoVelY += GRAVITY;
@@ -434,7 +435,6 @@ function updateAndRender() {
         }
     }
 
-    // Adjusted the supernatural moon color from red to a ghostly pale silver-blue
     ctx.save();
     ctx.shadowBlur = 40;
     ctx.shadowColor = "rgba(100, 140, 200, 0.4)";
@@ -445,7 +445,7 @@ function updateAndRender() {
     ctx.beginPath();
     ctx.arc(canvas.width - 150, 200, 80, 0, Math.PI * 2); ctx.fill();
 
-    farLayer.draw();
+    farLayer.draw();  // Rendered deep layer behind the near hills
     nearLayer.draw();
 
     ctx.fillStyle = "rgb(8, 4, 12)";
