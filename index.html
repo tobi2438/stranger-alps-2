@@ -310,9 +310,9 @@ function downloadScreenshot() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         const strChars = [{c:'S',l:true},{c:'T',l:false},{c:'R',l:false},{c:'A',l:false},{c:'N',l:false},{c:'G',l:false},{c:'E',l:false},{c:'R',l:true}];
-        const alpsChars = [{c:'A',l:true},{c:'L',l:false},{c:'P',l:false},{c:'S',l:true}];
-        const fLarge = "155px 'Benguiat', 'Georgia', serif";
-        const fSmall = "112px 'Benguiat', 'Georgia', serif";
+        const alpsChars = [{c:'A',l:false},{c:'L',l:false},{c:'P',l:false},{c:'S',l:false}];
+        const fLarge = "155px 'Benguiat'";
+        const fSmall = "112px 'Benguiat'";
         const logoSpacing = 4;
         let wStranger = 0;
         strChars.forEach(ch => {
@@ -330,26 +330,19 @@ function downloadScreenshot() {
         wAlps -= logoSpacing;
         let startX = canvas.width / 2 - wStranger / 2;
         let startXAlps = canvas.width / 2 - wAlps / 2;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
         ctx.beginPath();
-        ctx.moveTo(startX, 110);
-        ctx.lineTo(startX, 92);
-        ctx.lineTo(startX + wStranger, 92);
-        ctx.lineTo(startX + wStranger, 110);
+        ctx.roundRect(startX, 92, wStranger, 18, 4);
         ctx.stroke();
         let barY = 242;
         ctx.beginPath();
-        ctx.moveTo(startX, barY - 15);
-        ctx.lineTo(startX, barY);
-        ctx.lineTo(startXAlps - 15, barY);
+        ctx.roundRect(startX, barY + 12, (startXAlps - 15) - startX, 12, 3);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(startX + wStranger, barY - 15);
-        ctx.lineTo(startX + wStranger, barY);
-        ctx.lineTo(startXAlps + wAlps + 15, barY);
+        ctx.roundRect(startXAlps + wAlps + 15, barY + 12, (startX + wStranger) - (startXAlps + wAlps + 15), 12, 3);
         ctx.stroke();
         ctx.shadowBlur = 0;
         let currX = startX;
@@ -680,9 +673,9 @@ function updateAndRender() {
         drawNeonText("Music prod. by erra", "32px 'Share Tech Mono', monospace", "rgb(180, 170, 175)", canvas.width / 2, 60, 4, true);
         
         const strChars = [{c:'S',l:true},{c:'T',l:false},{c:'R',l:false},{c:'A',l:false},{c:'N',l:false},{c:'G',l:false},{c:'E',l:false},{c:'R',l:true}];
-        const alpsChars = [{c:'A',l:true},{c:'L',l:false},{c:'P',l:false},{c:'S',l:true}];
-        const fLarge = "155px 'Benguiat', 'Georgia', serif";
-        const fSmall = "112px 'Benguiat', 'Georgia', serif";
+        const alpsChars = [{c:'A',l:false},{c:'L',l:false},{c:'P',l:false},{c:'S',l:false}];
+        const fLarge = "155px 'Benguiat'";
+        const fSmall = "112px 'Benguiat'";
         const logoSpacing = 4;
         let wStranger = 0;
         strChars.forEach(ch => {
@@ -700,26 +693,19 @@ function updateAndRender() {
         wAlps -= logoSpacing;
         let startX = canvas.width / 2 - wStranger / 2;
         let startXAlps = canvas.width / 2 - wAlps / 2;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = "rgb(242, 17, 17)";
         ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
         ctx.shadowBlur = 20;
         ctx.beginPath();
-        ctx.moveTo(startX, 110);
-        ctx.lineTo(startX, 92);
-        ctx.lineTo(startX + wStranger, 92);
-        ctx.lineTo(startX + wStranger, 110);
+        ctx.roundRect(startX, 92, wStranger, 18, 4);
         ctx.stroke();
         let barY = 242;
         ctx.beginPath();
-        ctx.moveTo(startX, barY - 15);
-        ctx.lineTo(startX, barY);
-        ctx.lineTo(startXAlps - 15, barY);
+        ctx.roundRect(startX, barY + 12, (startXAlps - 15) - startX, 12, 3);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(startX + wStranger, barY - 15);
-        ctx.lineTo(startX + wStranger, barY);
-        ctx.lineTo(startXAlps + wAlps + 15, barY);
+        ctx.roundRect(startXAlps + wAlps + 15, barY + 12, (startX + wStranger) - (startXAlps + wAlps + 15), 12, 3);
         ctx.stroke();
         ctx.shadowBlur = 0;
         let currX = startX;
