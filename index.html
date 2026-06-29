@@ -604,14 +604,14 @@ function updateAndRender() {
             let speedMod = level === 1 ? 14.4 : (level === 2 ? 16.5 : 19.8);
             obs.x -= speedMod;
             
-            let hitWidth = isJumping ? 70 : 140;
-            let hitHeight = isJumping ? 115 : 195;
-            let hitOffsetX = isJumping ? 135 : 100;
-            let hitOffsetY = isJumping ? 127 : 82;
+            let hitWidth = isJumping ? 75 : 150;
+            let hitHeight = isJumping ? 122 : 208;
+            let hitOffsetX = isJumping ? 132 : 95;
+            let hitOffsetY = isJumping ? 124 : 76;
             let dinoHitbox = { x: dinoX + hitOffsetX, y: dinoY + hitOffsetY, w: hitWidth, h: hitHeight };
-            let infY = level === 3 ? -40 : -90;
+            let infY = level === 3 ? -20 : -75;
             
-            let hMod = level === 1 ? 0.52 : (level === 2 ? 0.41 : 0.46);
+            let hMod = level === 1 ? 0.56 : (level === 2 ? 0.45 : 0.50);
             let obsHitbox = {
                 x: obs.x + (obs.w * ((1 - hMod) / 2)), 
                 y: obs.y - (infY / 2), 
