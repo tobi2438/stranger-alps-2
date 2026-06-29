@@ -41,7 +41,7 @@
 
 <script>
 const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d");
 
 const FPS = 60;
 const GRAVITY = 1.6;
@@ -79,7 +79,8 @@ let isExportingScreenshot = false;
 const dinoImgs = {};
 const obsImgs = {};
 
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
+const rawSfxBuffers = {};
 const audioBuffers = {};
 const sfx = {
     playlist: ["music1.ogg", "music2.ogg"],
@@ -88,18 +89,30 @@ const sfx = {
 };
 
 let lastTime = performance.now();
+let smoothDt = 1;
 let animTicks = 0;
 
 function initAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        for (let key in rawSfxBuffers) {
+            if (rawSfxBuffers[key] && !audioBuffers[key]) {
+                audioCtx.decodeAudioData(rawSfxBuffers[key].slice(0))
+                    .then(decodedBuffer => {
+                        audioBuffers[key] = decodedBuffer;
+                    })
+                    .catch(() => {});
+            }
+        }
+    }
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
 }
 
 function playSFX(name) {
-    if (!audioCtx) return;
     initAudioContext();
-    if (!audioBuffers[name]) return;
+    if (!audioCtx || !audioBuffers[name]) return;
     const source = audioCtx.createBufferSource();
     source.buffer = audioBuffers[name];
     source.connect(audioCtx.destination);
@@ -128,10 +141,7 @@ function initAssets() {
         fetch(sfxToLoad[key])
             .then(response => response.arrayBuffer())
             .then(buffer => {
-                return audioCtx.decodeAudioData(buffer);
-            })
-            .then(decodedBuffer => {
-                audioBuffers[key] = decodedBuffer;
+                rawSfxBuffers[key] = buffer;
             })
             .catch(() => {});
     }
@@ -197,21 +207,20 @@ class MountainLayer {
 
     draw() {
         for (let xPos of [this.offset, this.offset + this.totalWidth]) {
-            let roundedX = Math.round(xPos);
             for (let m of this.mountains) {
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
-                ctx.moveTo(Math.round(m.poly[0].x + roundedX), Math.round(m.poly[0].y));
-                ctx.lineTo(Math.round(m.poly[1].x + roundedX), Math.round(m.poly[1].y));
-                ctx.lineTo(Math.round(m.poly[2].x + roundedX), Math.round(m.poly[2].y));
+                ctx.moveTo(m.poly[0].x + xPos, m.poly[0].y);
+                ctx.lineTo(m.poly[1].x + xPos, m.poly[1].y);
+                ctx.lineTo(m.poly[2].x + xPos, m.poly[2].y);
                 ctx.closePath();
                 ctx.fill();
                 if (m.snow) {
                     ctx.fillStyle = COLORS.SNOW;
                     ctx.beginPath();
-                    ctx.moveTo(Math.round(m.snow[0].x + roundedX), Math.round(m.snow[0].y));
-                    ctx.lineTo(Math.round(m.snow[1].x + roundedX), Math.round(m.snow[1].y));
-                    ctx.lineTo(Math.round(m.snow[2].x + roundedX), Math.round(m.snow[2].y));
+                    ctx.moveTo(m.snow[0].x + xPos, m.snow[0].y);
+                    ctx.lineTo(m.snow[1].x + xPos, m.snow[1].y);
+                    ctx.lineTo(m.snow[2].x + xPos, m.snow[2].y);
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -254,11 +263,11 @@ function drawNeonText(text, fontStr, color, x, y, spacing = 6, center = false) {
 
     for (let char of text) {
         ctx.fillStyle = color;
-        ctx.fillText(char, Math.round(currX), Math.round(y));
+        ctx.fillText(char, currX, y);
         
         if (isStrangerTitle) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.fillText(char, Math.round(currX), Math.round(y - 2));
+            ctx.fillText(char, currX, y - 2);
         }
         
         currX += ctx.measureText(char).width + spacing;
@@ -310,6 +319,14 @@ function triggerHit() {
 
 function downloadScreenshot() {
     try {
+        const offCanvas = document.createElement("canvas");
+        offCanvas.width = 1600;
+        offCanvas.height = 900;
+        const offCtx = offCanvas.getContext("2d");
+        
+        let tempCtx = ctx;
+        ctx = offCtx;
+        
         isExportingScreenshot = true;
         drawScene(animTicks);
         isExportingScreenshot = false;
@@ -354,14 +371,15 @@ function downloadScreenshot() {
         drawNeonText("STRANGER", "125px 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 205, 18, true);
         drawNeonText("ALPS", "125px 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 335, 18, true);
         
+        ctx.font = "44px 'Share Tech Mono', monospace";
+        let maxW = 0;
+        levelResults.forEach(r => {
+            let w = 0;
+            for(let char of r) { w += ctx.measureText(char).width + 8; }
+            if(w > maxW) maxW = w;
+        });
+
         levelResults.forEach((res, i) => {
-            ctx.font = "44px 'Share Tech Mono', monospace";
-            let maxW = 0;
-            levelResults.forEach(r => {
-                let w = 0;
-                for(let char of r) { w += ctx.measureText(char).width + 8; }
-                if(w > maxW) maxW = w;
-            });
             drawNeonText(res, "44px 'Share Tech Mono', monospace", "rgb(200, 190, 192)", canvas.width / 2 - maxW / 2, 420 + (i * 50), 8, false);
         });
         
@@ -382,7 +400,9 @@ function downloadScreenshot() {
             }
         });
 
-        canvas.toBlob((blob) => {
+        ctx = tempCtx;
+
+        offCanvas.toBlob((blob) => {
             if (!blob) return;
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -517,7 +537,7 @@ function drawScene(ticks) {
     ctx.fillStyle = COLORS.ASH;
     for (let p of ashParticles) {
         ctx.beginPath();
-        ctx.arc(Math.round(p.x), Math.round(p.y), 2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -526,7 +546,7 @@ function drawScene(ticks) {
         if (dImg && dImg.complete) {
             ctx.save();
             let size = level === 1 ? 390 : (level === 2 ? 340 : 290);
-            ctx.translate(Math.round(dinoX) + size / 2, Math.round(dinoY) + size / 2);
+            ctx.translate(dinoX + size / 2, dinoY + size / 2);
             ctx.rotate(((jumpAngle % 360) * Math.PI) / 180);
             ctx.drawImage(dImg, -size / 2, -size / 2, size, size);
             ctx.restore();
@@ -536,7 +556,7 @@ function drawScene(ticks) {
             let oImg = obsImgs[obs.type];
             if (oImg && oImg.complete) {
                 let yF = obs.type === 2 ? Math.sin(ticks * 0.003) * 12 : 0;
-                ctx.drawImage(oImg, Math.round(obs.x), Math.round(obs.y + yF), obs.w, obs.h);
+                ctx.drawImage(oImg, obs.x, obs.y + yF, obs.w, obs.h);
             }
         }
     }
@@ -550,14 +570,15 @@ function updateAndRender() {
     lastTime = now;
     
     if (dt > 3) dt = 1;
-    animTicks += dt * 16.666;
+    smoothDt = smoothDt * 0.85 + dt * 0.15;
+    animTicks += smoothDt * 16.666;
 
-    if (clickCooldown > 0) clickCooldown -= dt;
-    if (shakeTimer > 0) shakeTimer -= dt;
+    if (clickCooldown > 0) clickCooldown -= smoothDt;
+    if (shakeTimer > 0) shakeTimer -= smoothDt;
 
     for (let p of ashParticles) {
         if (state === 1 || state === 0 || state === 3 || state === 2) {
-            p.x -= p.speed * dt;
+            p.x -= p.speed * smoothDt;
         }
         if (p.x < 0) {
             p.x = canvas.width;
@@ -566,12 +587,12 @@ function updateAndRender() {
     }
 
     if (state === 1) {
-        farLayer.update(dt);
-        nearLayer.update(dt);
+        farLayer.update(smoothDt);
+        nearLayer.update(smoothDt);
         
-        dinoVelY += GRAVITY * dt;
-        dinoY += dinoVelY * dt;
-        if (isJumping) jumpAngle -= 11 * dt;
+        dinoVelY += GRAVITY * smoothDt;
+        dinoY += dinoVelY * smoothDt;
+        if (isJumping) jumpAngle -= 11 * smoothDt;
         if (dinoY >= GROUND_Y) {
             dinoY = GROUND_Y;
             isJumping = false;
@@ -579,7 +600,7 @@ function updateAndRender() {
         }
 
         if (!finishingLevel) {
-            spawnTimer += dt;
+            spawnTimer += smoothDt;
             if (spawnTimer > nextSpawnThreshold) {
                 let obsSize = level === 1 ? 280 : (level === 2 ? 350 : 330);
                 let obsY = level === 1 ? (900 - 80 - obsSize + 30) : (level === 2 ? (900 - 80 - obsSize + 20) : (900 - 80 - obsSize + 20));
@@ -610,7 +631,7 @@ function updateAndRender() {
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             let speedMod = level === 1 ? 14.4 : (level === 2 ? 16.5 : 19.8);
-            obs.x -= speedMod * dt;
+            obs.x -= speedMod * smoothDt;
             
             let hitWidth = isJumping ? 65 : 135;
             let hitHeight = isJumping ? 65 : 185;
@@ -725,15 +746,16 @@ function updateAndRender() {
         
         drawNeonText(title, "112px 'Georgia', serif", COLORS.TEXT, canvas.width / 2, 120, 20, true);
         
+        ctx.font = "44px 'Share Tech Mono', monospace";
+        let maxW = 0;
+        levelResults.forEach(r => {
+            let w = 0;
+            for(let char of r) { w += ctx.measureText(char).width + 8; }
+            if(w > maxW) maxW = w;
+        });
+
         levelResults.forEach((res, i) => {
-            ctx.font = "44px 'Share Tech Mono', monospace";
-            let maxW = 0;
-            levelResults.forEach(r => {
-                let w = 0;
-                for(let char of r) { w += ctx.measureText(char).width + 8; }
-                if(w > maxW) maxW = w;
-            });
-            drawNeonText(res, "44px 'Share Tech Mono', monospace", canvas.width / 2 - maxW / 2, 200 + (i * 50), 8, false);
+            drawNeonText(res, "44px 'Share Tech Mono', monospace", "rgb(200, 190, 192)", canvas.width / 2 - maxW / 2, 200 + (i * 50), 8, false);
         });
         
         instr.forEach((line, i) => {
